@@ -33,7 +33,7 @@ export class Wallet {
 
         this.signer = await provider.getSigner();
 
-        this.addInfos();
+        await this.addInfos();
     }
 
     async addInfos(){

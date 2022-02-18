@@ -5,10 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc",
-    "publish" : "npx tsc && npm publish"
+    "build": "npx tsc && npx babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
+    "publish": "npx tsc && npx babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline && npm publish"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "author": "Drengr",
   "license": "ISC",
   "dependencies": {
@@ -18,6 +20,10 @@
     "web3modal": "^1.9.5"
   },
   "devDependencies": {
+    "@babel/cli": "^7.17.3",
+    "@babel/core": "^7.17.5",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
     "typescript": "^4.5.5"
   }
 }
