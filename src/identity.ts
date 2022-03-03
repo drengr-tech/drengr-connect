@@ -4,12 +4,12 @@ import { SiweMessage } from "siwe";
 import axios from "axios";
 
 
-export interface PendingVerificationDto {
+export interface PendingVerification {
     address: string;
     nonce: string;
 } 
 
-export interface VerificationResponseDto {
+export interface VerificationResponse {
     address: string,
     nonce : string,
     verified: boolean
@@ -21,6 +21,7 @@ export class Wallet {
     modal : web3modal;
     address!: string;
     chainId!: number;
+    connected = false;
 
     constructor(){
         this.modal = new web3modal();
@@ -34,6 +35,8 @@ export class Wallet {
         this.signer = await provider.getSigner();
 
         await this.addInfos();
+
+        this.connected = true;
     }
 
     async addInfos(){
@@ -58,7 +61,7 @@ export class Wallet {
 
         const response = await axios.get(`https://api.drengr.io/verification/nonce/${this.address}`);
 
-        const pendingVerification : PendingVerificationDto = response.data;
+        const pendingVerification : PendingVerification = response.data;
 
         return pendingVerification.nonce;
 
@@ -90,6 +93,8 @@ export class Wallet {
 }
 
 const wallet = new Wallet();
+
+export {wallet}
 
 export const connect = async () : Promise<string> => {
     
