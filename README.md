@@ -156,7 +156,9 @@ id: string;
 txHash: string;
 payer: string;
 recipient: string; 
-connected to
+amount: number;
+productId: string;
+productAmount: number;
 isTestnet: boolean;
 callbackUrl: string;
 ```
