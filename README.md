@@ -99,8 +99,10 @@ As we don't have a UI to manage webhooks yet, you must include your callback URL
 ```
 txHash: string;
 payer: string;
-recipient: string; 
-connected to
+recipient: string;
+amount: number;
+productId: string;
+productAmount: number;
 isTestnet: boolean;
 callbackUrl: string;
 ```
@@ -126,19 +128,22 @@ recipient: string;
 
 txHash: string;
 
-amount: number; //Included only if status is COMPLETED
+amount: number;
+
+productId: string;
+
+productAmount: number;
 
 isTestnet:boolean;
 ```
 
-If the payment has been posted on the blockchain it will be marked as completed. 
-
-We will introduce automatic confirmation in the future, but for the time being you need to check that amount is correct.
+If the payment has been posted on the blockchain and the amount is correct it will be marked as completed. 
 
 If a payment is marked as FAILED it is either because :
 - The payment was not posted on the blockchain
 - A bad transaction hash was provided
 - An amount of 0 was sent from the payer to the recipient in this transaction
+- The payer and recipient provided and the one posted on the blockchain did not match
 
 ### Webhook
 
