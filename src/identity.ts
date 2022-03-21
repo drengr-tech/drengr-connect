@@ -44,9 +44,11 @@ export class Wallet {
         this.chainId = await this.signer.getChainId();
     }
 
-    async getVerification(){
-        
-        const nonce = await this.requestNonce();
+    async getVerification(nonce : string = ""){
+
+        if(nonce.trim() === ""){
+            nonce = await this.requestNonce();
+        }
 
         const infos = await this.createVerificationInfos(nonce);
 
@@ -104,12 +106,16 @@ export const connect = async () : Promise<string> => {
 
 }
 
-export const getVerificationMessage = async () : Promise<any> => {
+export const getVerificationMessage = async (nonce : string = "") : Promise<any> => {
+
+    if(nonce.trim() === ""){
+
+    }
 
     if(!wallet.address){
         await wallet.connect();
     }
 
-    return await wallet.getVerification();
+    return await wallet.getVerification(nonce);
 
 }
