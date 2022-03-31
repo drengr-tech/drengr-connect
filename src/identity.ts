@@ -24,7 +24,7 @@ export class Wallet {
     connected = false;
 
     constructor(){
-        this.modal = new web3modal();
+        this.modal = new web3modal({});
     }
 
     async connect(){

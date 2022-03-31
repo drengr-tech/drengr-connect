@@ -1,9 +1,12 @@
 const path = require('path');
 
 module.exports = {
-  entry: './dist/index.js',
+  entry: {
+    index: path.resolve(__dirname, "dist", "cjs", "index.js"),
+  },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'my-first-webpack.bundle.js',
+    path: path.resolve(__dirname, "dist", "umd"),
+    filename: "[name].min.js",
+    libraryTarget: "umd"
   },
 };
