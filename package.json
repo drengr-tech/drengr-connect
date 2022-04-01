@@ -10,8 +10,7 @@
     "build": "npm run build:cjs && npm run build:esm && npx webpack",
     "build:cjs": "npx tsc -p tsconfig.cjs.json",
     "build:esm": "npx tsc -p tsconfig.esm.json",
-    "build:umd": "npx webpack",
-    "publish": "npm publish"
+    "build:umd": "npx webpack"
   },
   "files": [
     "dist"
