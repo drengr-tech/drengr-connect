@@ -18,9 +18,9 @@ export class Modal {
 
             modal.id = "";
             modal.style.visibility = "";
+            modal.style.display = "flex"
 
             let container = (this.container = document.createElement("div"));
-            container.id = "MODAL_CONTAINER";
 
             this.updateElemStyle(container, {
                 width: "100vw",
@@ -33,6 +33,7 @@ export class Modal {
                 alignItems: "center",
                 backgroundColor: "rgba(0,0,0,0.4)",
                 visibility: "visible",
+                zIndex: "999"
             });
 
             container.addEventListener("click", () => {

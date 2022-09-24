@@ -2,13 +2,14 @@ import { BigNumber, Contract, ethers, providers, Signer } from "ethers";
 import { Wallet } from "./identity";
 import { Modal } from "./modal";
 
-export class NFT {
+export class NFT extends EventTarget {
     provider: providers.Provider;
 
     nftContract: Contract;
     saleContract: Contract;
 
     constructor(contratAddress: string, saleAddress: string) {
+        super();
         this.provider = new providers.JsonRpcProvider(
             "https://mainnet.infura.io/v3/1f272d4f6d124328a70a3f62fe06a997"
         );
@@ -60,19 +61,17 @@ export class NFT {
         // const balance = await signer.getBalance();
 
         try {
-            await signerContract.callStatic.mint(
-                signer.getAddress(),
-                formatedTokenId,
-                { value: price }
-            );
+            await signerContract.callStatic.mint(address, formatedTokenId, {
+                value: price,
+            });
 
-            let tx = await signerContract.mint(
-                signer.getAddress(),
-                formatedTokenId,
-                { value: price }
-            );
+            let tx = await signerContract.mint(address, formatedTokenId, {
+                value: price,
+            });
 
+            this.dispatchEvent(new Event("mintstart"));
             await tx.wait();
+            this.dispatchEvent(new Event("mintend"));
         } catch (e: any) {
             if (e.message) {
                 throw new Error(e.message);
@@ -84,61 +83,119 @@ export class NFT {
 }
 
 interface NFTShopOptions {
-
-    type : "unique" | "random";
+    type: "unique" | "random";
     contractAddress: string;
     saleAddress: string;
     price: number;
-    modalEl: string;
-    availableEl: string;
-    buyCryptoEl: string;
-
 }
 
-interface NFTShopOptionsUnique extends NFTShopOptions{
-    type: "unique"
-    id: number | string;
+interface NFTShopOptionsUnique extends NFTShopOptions {
+    type: "unique";
+    id?: number | string;
 }
 
 interface NFTShopOptionsRandom extends NFTShopOptions {
-    type: "random"
+    type: "random";
 }
 
-
-function setupRandomNFTShop(options: NFTShopOptionsRandom){
-
+interface NFTShopSetupOptionsUnique extends NFTShopOptionsUnique {
+    modalEl: string;
+    availableEl: string;
+    buyCryptoEl: string;
+    onError?: Function;
+    onMintEnd?: Function; 
 }
 
-function setupUniqueNFTShop(options : NFTShopOptionsUnique){
-    
-    let modal = new Modal(options.modalEl);
-    let nft = new NFT(options.contractAddress, options.saleAddress);
+export class NFTShopUnique extends EventTarget {
+    nft: NFT;
 
-    document.getElementById(options.buyCryptoEl)?.addEventListener("click", async () => {
+    constructor(private options: NFTShopOptionsUnique) {
+        super();
+        this.nft = new NFT(options.contractAddress, options.saleAddress);
+        // this.nft.addEventListener("mintstart", (e) => {
+        //     super.dispatchEvent(e);
+        // });
+
+        // this.nft.addEventListener("mintend", (e) => {
+        //     super.dispatchEvent(e);
+        // });
+    }
+
+    async buyNFT(id: number | undefined = undefined) {
+        if (!id && !this.options.id) {
+            throw new Error("No id specified");
+        }
 
         const wallet = new Wallet();
 
         await wallet.connect();
 
-        modal.showModal();
-
         try {
-            await nft.buyToken(options.id, wallet.signer);
-        } catch (e) {
-            console.error(e)
-        }finally{
-            modal.hideModal()
+            if (id) {
+                await this.nft.buyToken(id, wallet.signer);
+            }
+            if (this.options.id) {
+                await this.nft.buyToken(this.options.id, wallet.signer);
+            }
+        } catch (e: any) {
+            console.error(e);
+            super.dispatchEvent(new Event("error", e));
+        }
+    }
+
+    async isAvailable(id: number | undefined = undefined): Promise<boolean> {
+        if (!id && !this.options.id) {
+            throw new Error("No id specified");
         }
 
-    });
 
+        if (id) {
+            return await this.nft.isSold(id);
+        }
+
+        return await this.nft.isSold(this.options.id as any);
+    }
 }
 
-export function setupNFTShop(options : NFTShopOptionsRandom | NFTShopOptionsUnique){
+function setupRandomNFTShop(options: NFTShopOptionsRandom) {}
 
-    if(options.type === "unique"){
-        return setupUniqueNFTShop(options)
-    }else{
-        return setupRandomNFTShop(options)
+function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
+    let mintingModal = new Modal(options.modalEl);
+    let nftShopUnique = new NFTShopUnique(options);
+
+    // nftShopUnique.isAvailable().then((available) => {});
+
+    nftShopUnique.addEventListener("mintstart", () => {
+        mintingModal.showModal();
+    });
+
+    nftShopUnique.addEventListener("mintend", () => {
+        mintingModal.hideModal();
+        if(options.onMintEnd){
+            options.onMintEnd();
+        }
+    });
+
+    nftShopUnique.addEventListener("error", (message) => {
+        if(options.onError){
+            options.onError(message);
+        }
+    })
+
+    document
+        .getElementById(options.buyCryptoEl)
+        ?.addEventListener("click", () => {
+            nftShopUnique.buyNFT();
+        });
+}
+
+export function setupNFTShop(
+    options: NFTShopOptionsRandom | NFTShopSetupOptionsUnique
+) {
+    if (options.type === "unique") {
+        return setupUniqueNFTShop(options);
+        
+    } else {
+        return setupRandomNFTShop(options);
     }
 }
