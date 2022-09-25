@@ -73,8 +73,8 @@ export class NFT extends EventTarget {
             await tx.wait();
             this.dispatchEvent(new Event("mintend"));
         } catch (e: any) {
-            if (e.message) {
-                throw new Error(e.message);
+            if (e.data.message) {
+                throw new Error(e.data.message);
             } else {
                 throw new Error(e);
             }
@@ -103,7 +103,14 @@ interface NFTShopSetupOptionsUnique extends NFTShopOptionsUnique {
     availableEl: string;
     buyCryptoEl: string;
     onError?: Function;
-    onMintEnd?: Function; 
+    onMintEnd?: Function;
+    onAvailable?: Function;
+}
+
+class MintErrorEvent extends Event {
+    constructor(public message: string) {
+        super("mintError");
+    }
 }
 
 export class NFTShopUnique extends EventTarget {
@@ -139,15 +146,16 @@ export class NFTShopUnique extends EventTarget {
             }
         } catch (e: any) {
             console.error(e);
-            super.dispatchEvent(new Event("error", e));
+            super.dispatchEvent(new MintErrorEvent(e));
         }
     }
 
-    async isAvailable(id: number | undefined = undefined): Promise<boolean> {
+    async isAvailable(
+        id: string | number | undefined = undefined
+    ): Promise<boolean> {
         if (!id && !this.options.id) {
             throw new Error("No id specified");
         }
-
 
         if (id) {
             return await this.nft.isSold(id);
@@ -163,24 +171,29 @@ function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
     let mintingModal = new Modal(options.modalEl);
     let nftShopUnique = new NFTShopUnique(options);
 
-    // nftShopUnique.isAvailable().then((available) => {});
+    if (options.onAvailable) {
+        nftShopUnique.isAvailable(options.id).then((available) => {
+            options.onAvailable && options.onAvailable(available);
+        });
+    }
 
     nftShopUnique.addEventListener("mintstart", () => {
+        console.log("caught it");
         mintingModal.showModal();
     });
 
     nftShopUnique.addEventListener("mintend", () => {
         mintingModal.hideModal();
-        if(options.onMintEnd){
+        if (options.onMintEnd) {
             options.onMintEnd();
         }
     });
 
-    nftShopUnique.addEventListener("error", (message) => {
-        if(options.onError){
-            options.onError(message);
+    nftShopUnique.addEventListener("mintError", (error) => {
+        if (options.onError) {
+            options.onError((error as MintErrorEvent).message);
         }
-    })
+    });
 
     document
         .getElementById(options.buyCryptoEl)
@@ -194,7 +207,6 @@ export function setupNFTShop(
 ) {
     if (options.type === "unique") {
         return setupUniqueNFTShop(options);
-        
     } else {
         return setupRandomNFTShop(options);
     }
