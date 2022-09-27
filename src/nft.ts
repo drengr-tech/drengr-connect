@@ -100,9 +100,9 @@ interface NFTShopOptionsRandom extends NFTShopOptions {
 
 interface NFTShopSetupOptionsUnique extends NFTShopOptionsUnique {
     modalEl: string;
-    availableEl: string;
     buyCryptoEl: string;
     onError?: Function;
+    onMintStart?: Function;
     onMintEnd?: Function;
     onAvailable?: Function;
 }
@@ -119,13 +119,13 @@ export class NFTShopUnique extends EventTarget {
     constructor(private options: NFTShopOptionsUnique) {
         super();
         this.nft = new NFT(options.contractAddress, options.saleAddress);
-        // this.nft.addEventListener("mintstart", (e) => {
-        //     super.dispatchEvent(e);
-        // });
+        this.nft.addEventListener("mintstart", (e) => {
+            super.dispatchEvent(new Event(e.type));
+        });
 
-        // this.nft.addEventListener("mintend", (e) => {
-        //     super.dispatchEvent(e);
-        // });
+        this.nft.addEventListener("mintend", (e) => {
+            super.dispatchEvent(new Event(e.type));
+        });
     }
 
     async buyNFT(id: number | undefined = undefined) {
@@ -178,8 +178,10 @@ function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
     }
 
     nftShopUnique.addEventListener("mintstart", () => {
-        console.log("caught it");
         mintingModal.showModal();
+        if (options.onMintStart) {
+            options.onMintStart();
+        }
     });
 
     nftShopUnique.addEventListener("mintend", () => {

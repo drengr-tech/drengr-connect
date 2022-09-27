@@ -14,18 +14,23 @@
     <button id="buyCrypto">MINT </button>
 
     <div style="visibility: hidden;" id="modal">MINTING</div>
+    <div style="visibility: hidden;" id="modalEnd">MINTING END</div>
 
     <script>
+        let endModal = new Modal("modalEnd");
         setupNFTShop({
             type: "unique",
-            contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-            saleAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-            id: 7,
+            contractAddress: "0xC0A301a89c29138444da9Ef30DDa9DBd1284aeB5",
+            saleAddress: "0xC0A301a89c29138444da9Ef30DDa9DBd1284aeB5",
+            id: 1,
             price: "0",
             modalEl: "modal",
-            availableEl: "",
             buyCryptoEl: "buyCrypto",
-            onAvailable: (available) => {console.log(available)}
+            onAvailable: (available) => {console.log(available)},
+            onMintStart: () => {},
+            onMintEnd: () => {
+                endModal.showModal()
+            }
         });
 
     </script>
