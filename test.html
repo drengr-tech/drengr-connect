@@ -19,18 +19,19 @@
     <script>
         let endModal = new Modal("modalEnd");
         setupNFTShop({
-            type: "unique",
+            type: "random",
             contractAddress: "0xC0A301a89c29138444da9Ef30DDa9DBd1284aeB5",
             saleAddress: "0xC0A301a89c29138444da9Ef30DDa9DBd1284aeB5",
-            id: 1,
+            defaultAmount: 1,
             price: "0",
             modalEl: "modal",
             buyCryptoEl: "buyCrypto",
-            onAvailable: (available) => {console.log(available)},
+            onSupply: (supply) => {console.log(supply)},
             onMintStart: () => {},
             onMintEnd: () => {
                 endModal.showModal()
-            }
+            },
+            chain:"goerli"
         });
 
     </script>

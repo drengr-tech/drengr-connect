@@ -1,18 +1,26 @@
 export class Modal {
-    baseElement: HTMLElement;
+    
+    baseElement?: HTMLElement;
     container?: HTMLElement;
 
     constructor(id: string) {
         let foundElem = document.getElementById(id);
 
         if (!foundElem) {
-            throw new Error("Element not found");
+            console.error("Modal has been setup with non existent element. id:", id)
+        }else{
+            this.baseElement = foundElem;
         }
 
-        this.baseElement = foundElem;
     }
 
     showModal() {
+
+        if(!this.baseElement){
+            console.error("Modal has not been incorrectly setup.");
+            return;
+        }
+
         if (!this.container) {
             let modal = this.baseElement.cloneNode(true) as HTMLElement;
 
@@ -51,6 +59,11 @@ export class Modal {
     }
 
     hideModal() {
+
+        if(!this.baseElement){
+            console.error("Modal has not been incorrectly setup.");
+            return;
+        }
 
         if(!this.container) return;
 

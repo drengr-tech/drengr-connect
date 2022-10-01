@@ -8,21 +8,26 @@ export class NFT extends EventTarget {
     nftContract: Contract;
     saleContract: Contract;
 
-    constructor(contratAddress: string, saleAddress: string) {
+    constructor(contratAddress: string, saleAddress: string, providerString: string) {
         super();
         this.provider = new providers.JsonRpcProvider(
-            "https://mainnet.infura.io/v3/1f272d4f6d124328a70a3f62fe06a997"
+            providerString
         );
         this.nftContract = new Contract(
             contratAddress,
-            ["function ownerOf(uint256 tokenId) public view returns (address)"],
+            [
+                "function ownerOf(uint256 tokenId) public view returns (address)",
+                "function totalSupply() public view returns (uint256)",
+                "function MAX_SUPPLY() public view returns (uint256)",
+            ],
             this.provider
         );
         this.saleContract = new Contract(
             saleAddress,
             [
-                "function mint(address _to, uint256 _id) public payable",
+                "function mint(address _to, uint256) public payable",
                 "function price() public view returns(uint256)",
+                "function priceMap(uint256) public view returns(uint256)",
             ],
             this.provider
         );
@@ -50,10 +55,27 @@ export class NFT extends EventTarget {
         return sold;
     }
 
-    async buyToken(tokenId: number | string, signer: Signer) {
+    async supply() : Promise<number>{
+
+        try {
+
+            let supply = await this.nftContract.totalSupply();
+
+            return supply.toNumber();
+            
+        } catch (e) {
+            console.error(e)
+            return 0;
+        }
+
+    }
+
+    async buyToken(tokenIdOrAmount: number | string, signer: Signer) {
         const signerContract = this.saleContract.connect(signer);
 
-        const formatedTokenId = BigNumber.from(tokenId);
+        const formatedTokenId = BigNumber.from(tokenIdOrAmount);
+
+        console.log("fetching price")
 
         const price: BigNumber = await signerContract.price();
 
@@ -87,6 +109,7 @@ interface NFTShopOptions {
     contractAddress: string;
     saleAddress: string;
     price: number;
+    chain: "mainnet" | "goerli"
 }
 
 interface NFTShopOptionsUnique extends NFTShopOptions {
@@ -96,16 +119,26 @@ interface NFTShopOptionsUnique extends NFTShopOptions {
 
 interface NFTShopOptionsRandom extends NFTShopOptions {
     type: "random";
+    defaultAmount: number;
 }
 
-interface NFTShopSetupOptionsUnique extends NFTShopOptionsUnique {
+interface NFTShopSetupOptions {
     modalEl: string;
     buyCryptoEl: string;
     onError?: Function;
     onMintStart?: Function;
     onMintEnd?: Function;
+}
+
+interface NFTShopSetupOptionsUnique extends NFTShopSetupOptions, NFTShopOptionsUnique {
     onAvailable?: Function;
 }
+
+interface NFTShopSetupOptionsRandom extends NFTShopSetupOptions, NFTShopOptionsRandom {
+    onSupply?: Function;
+}
+
+
 
 class MintErrorEvent extends Event {
     constructor(public message: string) {
@@ -113,12 +146,27 @@ class MintErrorEvent extends Event {
     }
 }
 
-export class NFTShopUnique extends EventTarget {
+abstract class BaseNFTShop extends EventTarget {
     nft: NFT;
 
-    constructor(private options: NFTShopOptionsUnique) {
+    constructor(options: NFTShopOptions) {
         super();
-        this.nft = new NFT(options.contractAddress, options.saleAddress);
+
+        let providerString = ""
+
+        switch (options.chain) {
+            case "mainnet":
+                providerString = "https://mainnet.infura.io/v3/1f272d4f6d124328a70a3f62fe06a997"
+                break;
+            case "goerli":
+                providerString = "https://goerli.infura.io/v3/1f272d4f6d124328a70a3f62fe06a997"
+                break;
+            default:
+                providerString = "https://mainnet.infura.io/v3/1f272d4f6d124328a70a3f62fe06a997"
+                break;
+        }
+
+        this.nft = new NFT(options.contractAddress, options.saleAddress, providerString);
         this.nft.addEventListener("mintstart", (e) => {
             super.dispatchEvent(new Event(e.type));
         });
@@ -128,25 +176,36 @@ export class NFTShopUnique extends EventTarget {
         });
     }
 
-    async buyNFT(id: number | undefined = undefined) {
-        if (!id && !this.options.id) {
-            throw new Error("No id specified");
-        }
-
+    async buyNFT(idOrAmount: number | string) {
         const wallet = new Wallet();
 
         await wallet.connect();
 
         try {
-            if (id) {
-                await this.nft.buyToken(id, wallet.signer);
-            }
-            if (this.options.id) {
-                await this.nft.buyToken(this.options.id, wallet.signer);
-            }
+            await this.nft.buyToken(idOrAmount, wallet.signer);
         } catch (e: any) {
             console.error(e);
             super.dispatchEvent(new MintErrorEvent(e));
+        }
+    }
+}
+
+export class NFTShopUnique extends BaseNFTShop {
+
+    constructor(private options: NFTShopOptionsUnique) {
+        super(options);
+    }
+
+    async buy(id: number | undefined = undefined) {
+        if (!id && !this.options.id) {
+            throw new Error("No id specified");
+        }
+
+        if (id) {
+            await this.buyNFT(id);
+        }
+        if (this.options.id) {
+            await this.buyNFT(this.options.id);
         }
     }
 
@@ -165,7 +224,58 @@ export class NFTShopUnique extends EventTarget {
     }
 }
 
-function setupRandomNFTShop(options: NFTShopOptionsRandom) {}
+export class NFTShopRandom extends BaseNFTShop {
+
+    constructor(private options: NFTShopOptionsRandom) {
+        super(options);
+        
+    }
+
+    async buy(amount: number) {
+        await this.buyNFT(amount);
+    }
+
+    async currentSupply(): Promise<number> {
+        return await this.nft.supply();
+    }
+}
+
+function setupRandomNFTShop(options: NFTShopSetupOptionsRandom) {
+    let mintingModal = new Modal(options.modalEl);
+    let nftShopRandom = new NFTShopRandom(options);
+
+    if (options.onSupply) {
+        nftShopRandom.currentSupply().then((currentSupply) => {
+            options.onSupply && options.onSupply(currentSupply);
+        });
+    }
+
+    nftShopRandom.addEventListener("mintstart", () => {
+        mintingModal.showModal();
+        if (options.onMintStart) {
+            options.onMintStart();
+        }
+    });
+
+    nftShopRandom.addEventListener("mintend", () => {
+        mintingModal.hideModal();
+        if (options.onMintEnd) {
+            options.onMintEnd();
+        }
+    });
+
+    nftShopRandom.addEventListener("mintError", (error) => {
+        if (options.onError) {
+            options.onError((error as MintErrorEvent).message);
+        }
+    });
+
+    document
+        .getElementById(options.buyCryptoEl)
+        ?.addEventListener("click", () => {
+            nftShopRandom.buy(options.defaultAmount);
+        });
+}
 
 function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
     let mintingModal = new Modal(options.modalEl);
@@ -200,12 +310,12 @@ function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
     document
         .getElementById(options.buyCryptoEl)
         ?.addEventListener("click", () => {
-            nftShopUnique.buyNFT();
+            nftShopUnique.buy();
         });
 }
 
 export function setupNFTShop(
-    options: NFTShopOptionsRandom | NFTShopSetupOptionsUnique
+    options: NFTShopSetupOptionsRandom | NFTShopSetupOptionsUnique
 ) {
     if (options.type === "unique") {
         return setupUniqueNFTShop(options);
