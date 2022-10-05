@@ -240,7 +240,7 @@ export class NFTShopRandom extends BaseNFTShop {
     }
 }
 
-function setupRandomNFTShop(options: NFTShopSetupOptionsRandom) {
+export function setupRandomNFTShop(options: NFTShopSetupOptionsRandom) {
     let mintingModal = new Modal(options.modalEl);
     let nftShopRandom = new NFTShopRandom(options);
 
@@ -277,7 +277,7 @@ function setupRandomNFTShop(options: NFTShopSetupOptionsRandom) {
         });
 }
 
-function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
+export function setupUniqueNFTShop(options: NFTShopSetupOptionsUnique) {
     let mintingModal = new Modal(options.modalEl);
     let nftShopUnique = new NFTShopUnique(options);
 
