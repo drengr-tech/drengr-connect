@@ -1,6 +1,6 @@
 import { connect, getVerificationMessage } from "./identity";
 import { Modal } from "./modal";
-import { setupNFTShop, setupRandomNFTShop, setupUniqueNFTShop } from "./nft";
+import { NFTShopRandom, NFTShopUnique, setupNFTShop, setupRandomNFTShop, setupUniqueNFTShop } from "./nft";
 
 import {pay, Payments} from "./payment";
 
@@ -14,5 +14,7 @@ export {
     setupNFTShop,
     setupRandomNFTShop,
     setupUniqueNFTShop,
-    Modal
+    Modal,
+    NFTShopUnique,
+    NFTShopRandom
 }
