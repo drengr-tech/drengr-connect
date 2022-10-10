@@ -2,7 +2,11 @@
 node_modules
 
 #Typescript
-dist
+dist/**
 
 #OS
 .DS_Store
+
+#Misc
+test.html
+
