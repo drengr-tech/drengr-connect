@@ -23,7 +23,7 @@
     "ethers": "5.5.4",
     "siwe": "^1.1.0",
     "web3modal": "^1.9.5",
-    "webpack": "^4.46.0"
+    "webpack": "^5.74.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.3",
