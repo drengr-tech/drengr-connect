@@ -1,5 +1,4 @@
 import { ethers, Signer } from "ethers"
-import web3modal, { Modal } from "web3modal"
 import { SiweMessage } from "siwe";
 import axios from "axios";
 import WalletConnectProvider from "@walletconnect/web3-provider";
@@ -19,38 +18,48 @@ export interface VerificationResponse {
 export class Wallet {
 
     signer!: Signer;
-    modal: web3modal;
+    modal?: any;
     address!: string;
     chainId!: number;
     connected = false;
 
     constructor() {
-        this.modal = new web3modal({
-            cacheProvider: true,
-            providerOptions: {
-               
-                walletconnect: {
-                    package: WalletConnectProvider, // required
-                    options: {
-                        infuraId: "79ba2ce2ebe64d86b8ecce3d234b89de", // required,
-                        qrcodeModalOptions: {
-                            mobileLinks: [
-                                "metamask",
-                              "rainbow",
-                              "argent",
-                              "trust",
-                              "imtoken",
-                              "pillar",
-                            ],
-                          },
-                    }
-                }
 
-            }
-        });
+        // this.modal = 
     }
 
     async connect() {
+
+        if(!this.modal){
+
+            let modal = (await import("web3modal")).default;
+
+            this.modal = new modal({
+                cacheProvider: true,
+                providerOptions: {
+                   
+                    walletconnect: {
+                        package: WalletConnectProvider, // required
+                        options: {
+                            infuraId: "79ba2ce2ebe64d86b8ecce3d234b89de", // required,
+                            qrcodeModalOptions: {
+                                mobileLinks: [
+                                    "metamask",
+                                  "rainbow",
+                                  "argent",
+                                  "trust",
+                                  "imtoken",
+                                  "pillar",
+                                ],
+                              },
+                        }
+                    }
+    
+                }
+            });
+
+        }
+
         const web3provider = await this.modal.connect();
 
         const provider = new ethers.providers.Web3Provider(web3provider);
@@ -112,6 +121,9 @@ export class Wallet {
     }
 
     async signMessage(message: SiweMessage) {
+
+        !this.connected && await this.connect()
+
         return await this.signer.signMessage(message.prepareMessage());
     }
 
