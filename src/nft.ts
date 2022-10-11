@@ -75,9 +75,17 @@ export class NFT extends EventTarget {
 
         const formatedTokenId = BigNumber.from(tokenIdOrAmount);
 
-        console.log("fetching price")
+        console.log("fetching price");
 
-        const price: BigNumber = await signerContract.price();
+        let price: BigNumber;
+        try {
+            price = await signerContract.price();
+        } catch (e) {
+            console.error("Error while fetching price", e);
+            console.log("No price applied");
+            price = BigNumber.from(0)
+        }
+
 
         const address = await signer.getAddress();
         // const balance = await signer.getBalance();

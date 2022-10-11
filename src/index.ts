@@ -5,6 +5,22 @@ import { NFTShopRandom, NFTShopUnique, setupNFTShop, setupRandomNFTShop, setupUn
 import {pay, Payments} from "./payment";
 
 
+document.addEventListener("DOMContentLoaded", () => {
+
+
+    document.querySelectorAll("[data-drengr-connect]").forEach(el => {
+
+        el.addEventListener("click", async () => {
+            let address = await connect();
+
+            el.innerHTML = address.slice(0, 5) + "..." + address.slice(address.length - 4);
+
+        })
+
+    })
+
+});
+
 
 export {
     connect,
