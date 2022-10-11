@@ -26,7 +26,11 @@ export class Wallet {
 
     constructor() {
 
-        this.modal = new web3modal({
+        this.modal = this.createModal()
+    }
+
+    createModal(){
+        return new web3modal({
             cacheProvider: true,
             providerOptions: {
                
@@ -62,6 +66,11 @@ export class Wallet {
 
         this.connected = true;
     }
+
+    async disconnect(){
+        await this.modal.clearCachedProvider();
+    }
+
 
     async addInfos() {
         this.address = await this.signer.getAddress();

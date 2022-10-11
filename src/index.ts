@@ -1,26 +1,54 @@
-import { connect, getVerificationMessage } from "./identity";
+import { connect, getVerificationMessage, wallet } from "./identity";
 import { Modal } from "./modal";
-import { NFTShopRandom, NFTShopUnique, setupNFTShop, setupRandomNFTShop, setupUniqueNFTShop } from "./nft";
+import {
+    NFTShopRandom,
+    NFTShopUnique,
+    setupNFTShop,
+    setupRandomNFTShop,
+    setupUniqueNFTShop,
+} from "./nft";
 
-import {pay, Payments} from "./payment";
+import { pay, Payments } from "./payment";
 
+document.addEventListener("DOMContentLoaded", async () => {
+    const connectedElements = document.querySelectorAll(
+        "[data-drengr-connect]"
+    );
 
-document.addEventListener("DOMContentLoaded", () => {
+    const cachedProvider = localStorage.getItem("WEB3_CONNECT_CACHED_PROVIDER");
 
+    let address: string;
+    let connected = cachedProvider && cachedProvider.trim() !== "";
 
-    document.querySelectorAll("[data-drengr-connect]").forEach(el => {
+    if (connected) {
+        address = await connect();
+    }
+
+    connectedElements.forEach(async (el) => {
+        if (connected) {
+            el.innerHTML =
+                address.slice(0, 5) + "..." + address.slice(address.length - 4);
+        }
 
         el.addEventListener("click", async () => {
-            let address = await connect();
+            console.log(connected)
+            if (connected) {
+                el.innerHTML = "CONNECT WALLET";
+                wallet.disconnect();
+                connected = false;
+                address = "";
+            } else {
+                address = await connect();
 
-            el.innerHTML = address.slice(0, 5) + "..." + address.slice(address.length - 4);
-
-        })
-
-    })
-
+                el.innerHTML =
+                    address.slice(0, 5) +
+                    "..." +
+                    address.slice(address.length - 4);
+                connected = true;
+            }
+        });
+    });
 });
-
 
 export {
     connect,
@@ -32,5 +60,5 @@ export {
     setupUniqueNFTShop,
     Modal,
     NFTShopUnique,
-    NFTShopRandom
-}
+    NFTShopRandom,
+};
