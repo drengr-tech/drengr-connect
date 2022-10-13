@@ -2,7 +2,8 @@
 node_modules
 
 #Typescript
-dist/*
+dist/cjs
+dist/esm
 
 #OS
 .DS_Store
@@ -13,5 +14,5 @@ local
 
 
 #Releases
-! ./dist/umd/index.min.js
+!dist/umd/index.min.js
 
