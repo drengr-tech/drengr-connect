@@ -19,14 +19,14 @@ export interface VerificationResponse {
 export class Wallet {
 
     signer!: Signer;
-    modal: web3modal;
+    modal?: web3modal;
     address!: string;
     chainId!: number;
     connected = false;
 
     constructor() {
 
-        this.modal = this.createModal()
+        //this.modal = this.createModal()
     }
 
     createModal(){
@@ -56,6 +56,11 @@ export class Wallet {
     }
 
     async connect() {
+
+        if(!this.modal){
+            this.modal = this.createModal();
+        }
+
         const web3provider = await this.modal.connect();
 
         const provider = new ethers.providers.Web3Provider(web3provider);
@@ -68,6 +73,7 @@ export class Wallet {
     }
 
     async disconnect(){
+        if(!this.modal) this.modal = this.createModal();
         await this.modal.clearCachedProvider();
     }
 

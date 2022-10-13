@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let address: string;
     let connected = cachedProvider && cachedProvider.trim() !== "";
+    let connecting = false;
 
     if (connected) {
         address = await connect();
@@ -31,23 +32,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         el.addEventListener("click", async () => {
-            console.log(connected)
             if (connected) {
                 el.innerHTML = "CONNECT WALLET";
-                wallet.disconnect();
+                await wallet.disconnect();
                 connected = false;
                 address = "";
-            } else {
-                address = await connect();
+            } else if (!connecting) {
+                try {
+                    connecting = true;
+                    address = await connect();
 
-                el.innerHTML =
-                    address.slice(0, 5) +
-                    "..." +
-                    address.slice(address.length - 4);
-                connected = true;
+                    el.innerHTML =
+                        address.slice(0, 5) +
+                        "..." +
+                        address.slice(address.length - 4);
+                    connected = true;
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    connecting = false;
+                }
             }
         });
     });
+
+    console.log("DRENGR LOADED");
+    document.dispatchEvent(new Event("DRENGRLoaded"));
+
 });
 
 export {
