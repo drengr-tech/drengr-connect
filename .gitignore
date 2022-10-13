@@ -2,7 +2,7 @@
 node_modules
 
 #Typescript
-dist/**
+dist/*
 
 #OS
 .DS_Store
@@ -10,4 +10,8 @@ dist/**
 #Misc
 test.html
 local
+
+
+#Releases
+! ./dist/umd/index.min.js
 
