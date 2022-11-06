@@ -19,51 +19,41 @@ export interface VerificationResponse {
 export class Wallet {
 
     signer!: Signer;
-    modal?: any;
+    modal: web3modal;
     address!: string;
     chainId!: number;
     connected = false;
 
     constructor() {
 
-        //this.modal = this.createModal()
-    }
-
-    async createModal(){
-        if(!this.modal){
-
-            this.modal = new web3modal({
-                cacheProvider: true,
-                providerOptions: {
-                   
-                    walletconnect: {
-                        package: WalletConnectProvider, // required
-                        options: {
-                            infuraId: "79ba2ce2ebe64d86b8ecce3d234b89de", // required,
-                            qrcodeModalOptions: {
-                                mobileLinks: [
-                                    "metamask",
-                                  "rainbow",
-                                  "argent",
-                                  "trust",
-                                  "imtoken",
-                                  "pillar",
-                                ],
-                              },
-                        }
+        this.modal = this.modal = new web3modal({
+            cacheProvider: true,
+            providerOptions: {
+               
+                walletconnect: {
+                    package: WalletConnectProvider, // required
+                    options: {
+                        infuraId: "79ba2ce2ebe64d86b8ecce3d234b89de", // required,
+                        qrcodeModalOptions: {
+                            mobileLinks: [
+                                "metamask",
+                              "rainbow",
+                              "argent",
+                              "trust",
+                              "imtoken",
+                              "pillar",
+                            ],
+                          },
                     }
-    
                 }
-            });
-        } 
-        
+
+            }
+        });
     }
+
+
 
     async connect() {
-
-        if(!this.modal){
-            this.modal = await this.createModal();
-        }
 
         const web3provider = await this.modal.connect();
 
@@ -77,7 +67,6 @@ export class Wallet {
     }
 
     async disconnect(){
-        if(!this.modal) this.modal = await this.createModal();
         await this.modal.clearCachedProvider();
     }
 
