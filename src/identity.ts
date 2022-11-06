@@ -26,7 +26,7 @@ export class Wallet {
 
     constructor() {
 
-        this.modal = this.modal = new web3modal({
+        this.modal = new web3modal({
             cacheProvider: true,
             providerOptions: {
                
