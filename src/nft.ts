@@ -77,12 +77,24 @@ export class NFT extends EventTarget {
 
         console.log("fetching price");
 
-        let price: BigNumber;
+        let price: BigNumber | undefined = undefined;
         try {
             price = await signerContract.price();
         } catch (e) {
-            console.error("Error while fetching price", e);
-            console.log("No price applied");
+            //console.error("Error while fetching price", e);
+            console.log("Can't fetch price for all collection");
+            //price = BigNumber.from(0)
+        }
+
+        try {
+            price = await signerContract.prices(tokenIdOrAmount);
+        } catch (e) {
+            //console.error("Error while fetching price", e);
+            console.log("Can't fetch price for this NFTs");
+            //price = BigNumber.from(0)
+        }
+
+        if(!price){
             price = BigNumber.from(0)
         }
 
@@ -103,7 +115,7 @@ export class NFT extends EventTarget {
             await tx.wait();
             this.dispatchEvent(new Event("mintend"));
         } catch (e: any) {
-            if (e.data.message) {
+            if (e.data && e.data.message) {
                 throw new Error(e.data.message);
             } else {
                 throw new Error(e);
